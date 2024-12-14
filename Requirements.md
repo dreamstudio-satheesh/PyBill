@@ -71,7 +71,7 @@
 
 ## 3. Database Schema Design
 
-### [Database Tables](Database Schema.md)
+[ Database Tables ](Schema.md)
 
 
 ## 4. Feature Implementations
