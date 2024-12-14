@@ -1,3 +1,4 @@
+```
 import sqlite3
 import bcrypt
 from datetime import datetime
@@ -164,6 +165,7 @@ class DatabaseManager:
         self.conn.commit()
         print("Initial data seeded successfully")
         self.close()
+```
 
 # Usage example
 if __name__ == '__main__':
