@@ -12,6 +12,17 @@ A robust desktop billing software solution designed for small to medium-sized bu
 - **Database**: SQLite with potential future scalability to PostgreSQL
 - **Security**: Bcrypt password hashing
 
+### Frontend: Tkinter
+- **Key Advantages**:
+  * Comes built-in with Python
+  * Low resource consumption
+  * Quick development cycle
+  * Cross-platform compatibility
+- **Recommended Approach**:
+  * Use modern Tkinter widgets (Treeview, Notebook)
+  * Implement responsive design principles
+  * Create modular UI components for easy maintenance
+
 ## System Architecture
 
 ### 1. Authentication & Security System
