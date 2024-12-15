@@ -10,6 +10,11 @@ A robust desktop billing software solution designed for small to medium-sized bu
 - **Database**: SQLite with potential future scalability to PostgreSQL
 - **Security**: Bcrypt password hashing
 
+- **Recommended Approach**:
+  * Use modern Tkinter widgets (Treeview, Notebook)
+  * Implement responsive design principles
+  * Create modular UI components for easy maintenance
+
 ## System Architecture
 
 ### 1. Authentication & Security System

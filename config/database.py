@@ -1,35 +1,47 @@
+import os
 import sqlite3
 import bcrypt
 from datetime import datetime
 
 class DatabaseManager:
-    def __init__(self, db_path='pybill.db'):
+    def __init__(self, db_path=None):
         """
         Initialize the database manager.
         Ensures the database and required tables are created.
         """
-        self.db_path = db_path
+        # Set database path inside the 'data' folder
+        self.db_path = db_path or os.path.join(os.path.dirname(__file__), '../data/pybill.db')
+        self.ensure_db_exists()
         self.create_tables()
+
+    def ensure_db_exists(self):
+        """
+        Ensure the database file exists. Create it if necessary.
+        """
+        db_directory = os.path.dirname(self.db_path)
+        if db_directory and not os.path.exists(db_directory):
+            os.makedirs(db_directory)  # Create the directory if it doesn't exist
+
+        if not os.path.exists(self.db_path):
+            print(f"Database '{self.db_path}' not found. Creating a new one...")
+            conn = sqlite3.connect(self.db_path)  # Create the database file
+            self.create_tables()
+            self.seed_initial_data()
+            conn.close()
+
 
     def connect(self):
         """Establish a connection to the database."""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            conn.row_factory = sqlite3.Row  # Enable named column access
-            return conn
-        except sqlite3.Error as e:
-            print(f"Database connection error: {e}")
-            return None
+        if not hasattr(self, 'conn') or not self.conn:
+            try:
+                self.conn = sqlite3.connect(self.db_path)
+                self.conn.row_factory = sqlite3.Row
+            except sqlite3.Error as e:
+                print(f"Database connection error: {e}")
+                self.conn = None
+        return self.conn
 
     def execute_query(self, query, params=None, commit=False):
-        """
-        Execute a query with optional parameters.
-        
-        :param query: SQL query to execute
-        :param params: Parameters to pass to the query (tuple or list)
-        :param commit: Whether to commit changes to the database
-        :return: Cursor object or None
-        """
         conn = self.connect()
         if conn:
             try:
@@ -37,12 +49,10 @@ class DatabaseManager:
                 cursor.execute(query, params or ())
                 if commit:
                     conn.commit()
-                return cursor
+                return cursor  # Return cursor for data fetches
             except sqlite3.Error as e:
                 print(f"SQL error: {e}")
-            finally:
-                conn.close()
-        return None
+                return None
 
     def create_tables(self):
         """Create all necessary tables for the billing software."""
@@ -122,8 +132,7 @@ class DatabaseManager:
 
     def create_admin_user(self, username, password):
         """
-        Create an admin user with a hashed password.
-        
+        Create an admin user with a hashed password.  
         :param username: Admin username
         :param password: Plain-text password
         """
@@ -140,21 +149,17 @@ class DatabaseManager:
             print(f"Failed to create admin user '{username}'. Username might already exist.")
 
     def seed_initial_data(self):
-        """
-        Seed initial data for categories and products.
-        """
         # Seed categories
         initial_categories = [
             ('Electronics', 'Electronic devices and accessories'),
             ('Clothing', 'Apparel and fashion items'),
             ('Books', 'Books and reading materials')
         ]
-        self.execute_query(
-            '''
-            INSERT OR IGNORE INTO categories (name, description)
-            VALUES (?, ?)
-            ''', initial_categories, commit=True
-        )
+        for category in initial_categories:
+            self.execute_query(
+                'INSERT OR IGNORE INTO categories (name, description) VALUES (?, ?)',
+                category, commit=True
+            )
 
         # Seed products
         initial_products = [
@@ -164,10 +169,17 @@ class DatabaseManager:
             ('Jeans', 2, 59.99, 75),
             ('Programming Book', 3, 49.99, 30)
         ]
-        self.execute_query(
-            '''
-            INSERT OR IGNORE INTO products (name, category_id, price, stock)
-            VALUES (?, ?, ?, ?)
-            ''', initial_products, commit=True
-        )
+        for product in initial_products:
+            self.execute_query(
+                'INSERT OR IGNORE INTO products (name, category_id, price, stock) VALUES (?, ?, ?, ?)',
+                product, commit=True
+            )
+        admin_username = 'admin'
+        admin_password = 'password'
+        self.create_admin_user(admin_username, admin_password)
         print("Initial data seeded successfully.")
+
+    def close(self):
+        if hasattr(self, 'conn') and self.conn:
+            self.conn.close()
+            self.conn = None
